@@ -1,70 +1,43 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
+import style from './App.style'
 import Firebase from '../../firebase/Firebase'
-import './App.css';import {
+import {
   Charts,
   ChartContainer,
   ChartRow,
   YAxis,
   LineChart,
-  AreaChart
+  AreaChart,
+  EventMarker
 } from "react-timeseries-charts";
-import { TimeSeries } from "pondjs";
-
-const style = {
-  Avg_Wind: {
-    line: {
-      normal: {stroke: "steelblue", fill: "none", strokeWidth: 1},
-      highlighted: {stroke: "#5a98cb", fill: "none", strokeWidth: 1},
-      selected: {stroke: "steelblue", fill: "none", strokeWidth: 1},
-      muted: {stroke: "steelblue", fill: "none", opacity: 0.4, strokeWidth: 1}
-    },
-    area: {
-        normal: {fill: "steelblue", stroke: "none", opacity: 0.25},
-        highlighted: {fill: "#5a98cb", stroke: "none", opacity: 0.25},
-        selected: {fill: "steelblue", stroke: "none", opacity: 0.25},
-        muted: {fill: "steelblue", stroke: "none", opacity: 0.25}
-    }
-  },
-  Gust: {
-      normal: {stroke: "green", fill: "none", strokeWidth: 1},
-      highlighted: {stroke: "#5a98cb", fill: "none", strokeWidth: 1},
-      selected: {stroke: "steelblue", fill: "none", strokeWidth: 1},
-      muted: {stroke: "steelblue", fill: "none", opacity: 0.4, strokeWidth: 1}
-  },
-  Water_Temp: {
-    normal: {stroke: "red", fill: "none", strokeWidth: 1},
-    highlighted: {stroke: "#5a98cb", fill: "none", strokeWidth: 1},
-    selected: {stroke: "steelblue", fill: "none", strokeWidth: 1},
-    muted: {stroke: "steelblue", fill: "none", opacity: 0.4, strokeWidth: 1}
-  },
-  Wave_Height: {
-    normal: {stroke: "yellow", fill: "none", strokeWidth: 1},
-    highlighted: {stroke: "#5a98cb", fill: "none", strokeWidth: 1},
-    selected: {stroke: "steelblue", fill: "none", strokeWidth: 1},
-    muted: {stroke: "steelblue", fill: "none", opacity: 0.4, strokeWidth: 1}
-  },
-};
+import {TimeSeries} from "pondjs";
 
 class App extends Component {
 
   constructor(props) {
-      super(props)
+    super(props)
 
-      this.state = {
-      }
+    this.state = {
+      tracker: null,
+      trackerValues: "-- knots",
+      trackerEvent: null,
+      markerMode: "flag"
+    }
   }
 
-  unwindDictionary(data){
+  unwindDictionary(data) {
     let array = [];
 
-    if(data != null){
-      Object.keys(data).forEach(key => {
-        let value = data[key];
-        array.push({
-          ...value,
-          key: key
+    if (data != null) {
+      Object
+        .keys(data)
+        .forEach(key => {
+          let value = data[key];
+          array.push({
+            ...value,
+            key: key
+          });
         });
-      });
     }
     return array;
   }
@@ -75,83 +48,123 @@ class App extends Component {
 
   loadData() {
     let columns = [];
-    let points = [];
     columns.push('time');
     Firebase
       .database()
       .ref('/buoys/2320627075/')
       .on('value', entries => {
         entries = this.unwindDictionary(entries.val());
+        let points = [];
         entries.forEach(entry => {
 
           Object.keys(entry).forEach(key => {
-            if(!columns.find(k => k === key) && key !== 'key'){
+            if (!columns.find(k => k === key) && key !== 'key') {
               columns.push(key);
             }
-          })
-          let point = [];
-          
-          columns.forEach(key => {
-            if(entry.hasOwnProperty(key)){
-              point.push(entry[key]);
-            }
-
-            points.push(point);
           });
-          
-        })
-        // console.log(columns)
-        // console.log(points)
+
+          let point = [];
+          columns.forEach(key => {
+            // eslint-disable-next-line
+            entry[key] ? point.push(entry[key]) : null;
+          });
+          points.push(point);
+        });
+
         let data = {
           name: "wind",
           columns: columns,
-          points: points,
+          points: points
         };
-        console.log(data)
+
         let series = new TimeSeries(data);
-        this.setState({ series, timerange: series.range() });
-    });
+        this.setState({
+          series,
+          timerange: series.range()
+        });
+      });
   }
 
   handleTimeRangeChange = (timerange) => {
     this.setState({ timerange })
   }
 
+  handleTrackerChanged = t => {
+    if (t) {
+      const e = this.state.series.atTime(t);
+      const eventTime = e.begin();
+      const values = {
+        Avg_Wind: `${e.get("Avg_Wind")} knots`,
+        Gust: `${e.get("Gust")} knots`,
+        Water_Temp: `${e.get("Water_Temp")}C`,
+      }
+      this.setState({
+        tracker: eventTime,
+        trackerValues: values,
+        trackerEvent: e
+      });
+    } else {
+      this.setState({ tracker: null, trackerValuess: null, trackerEvent: null });
+    }
+  };
+
+  renderMarker = () => {
+    if (!this.state.tracker) {
+      return <g/>;
+    }
+
+    return (
+      <EventMarker
+        type="flag"
+        axis="axis"
+        event={this.state.trackerEvent}
+        column="Avg_Wind"
+        info={[
+          { label: "Wind", value: this.state.trackerValues.Avg_Wind},
+          { label: "Gust", value: this.state.trackerValues.Gust},
+          { label: "Water Temp", value: this.state.trackerValues.Water_Temp},
+        ]}
+        infoTimeFormat="%H:%M"
+        infoWidth={120}
+        infoHeight={55}
+        markerRadius={2}
+        markerStyle={{
+          fill: "black"
+        }}
+      />
+    );
+
+  };
+
   render() {
-    let { series, timerange } = this.state;
-    if(series){
+    let {series, timerange} = this.state;
+    if (series) {
       return (
-      <ChartContainer
-        timeRange={timerange}
-        width={1000}
-        enablePanZoom={true}
-        onTimeRangeChanged={this.handleTimeRangeChange}
-      >
+        <ChartContainer
+          timeRange={timerange}
+          width={1000}
+          enablePanZoom={true}
+          onTimeRangeChanged={this.handleTimeRangeChange}
+          onTrackerChanged={this.handleTrackerChanged}
+        >
           <ChartRow height="200">
-              <YAxis id="axis1" label="Wind Speed" max={30} width="60" type="linear"/>
-              <Charts>
-                  <AreaChart
-                    style={style}
-                    axis="axis1"
-                    series={series}
-                    columns={{
-                      up: ["Avg_Wind"]
-                    }}
-                  />
-                  <LineChart
-                    style={style}
-                    axis="axis1"
-                    series={series}
-                    columns={["Gust"]}
-                  />
-                  {/* <LineChart style={style} axis="axis1" series={series} columns={["Wave_Height"]}/>
-                  <LineChart style={style} axis="axis1" series={series} columns={["Water_Temp"]}/> */}
-              </Charts>
+            <YAxis id="axis" label="Wind Speed" max={30} width="60" type="linear"/>
+            <Charts>
+              <AreaChart
+                style={style}
+                axis="axis"
+                series={series}
+                columns={{
+                up: ["Avg_Wind"]
+              }}/>
+              <LineChart style={style} axis="axis" series={series} columns={["Gust"]}/> 
+              {this.renderMarker()}
+            </Charts>
           </ChartRow>
-      </ChartContainer>
+        </ChartContainer>
       );
-    }else{
-      return ("Nothing here!")
+    } else {
+      return ("Loading...")
     }
   }
 }
