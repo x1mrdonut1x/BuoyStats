@@ -18,6 +18,7 @@ class App extends Component {
     super(props)
 
     this.state = {
+      timerange: null,
       tracker: null,
       trackerValues: "-- knots",
       trackerEvent: null,
@@ -52,7 +53,8 @@ class App extends Component {
     Firebase
       .database()
       .ref('/buoys/2320627075/')
-      .on('value', entries => {
+      .once('value')
+      .then(entries => {
         entries = this.unwindDictionary(entries.val());
         let points = [];
         entries.forEach(entry => {
@@ -80,7 +82,7 @@ class App extends Component {
         let series = new TimeSeries(data);
         this.setState({
           series,
-          timerange: series.range()
+          timerange: this.state.timerange ? this.state.timerange : series.range()
         });
       });
   }
@@ -97,6 +99,7 @@ class App extends Component {
         Avg_Wind: `${e.get("Avg_Wind")} knots`,
         Gust: `${e.get("Gust")} knots`,
         Water_Temp: `${e.get("Water_Temp")}C`,
+        Wave_Height: `${e.get("Wave_Height")}m`,
       }
       this.setState({
         tracker: eventTime,
@@ -116,17 +119,18 @@ class App extends Component {
     return (
       <EventMarker
         type="flag"
-        axis="axis"
+        axis="wind"
         event={this.state.trackerEvent}
         column="Avg_Wind"
         info={[
           { label: "Wind", value: this.state.trackerValues.Avg_Wind},
           { label: "Gust", value: this.state.trackerValues.Gust},
           { label: "Water Temp", value: this.state.trackerValues.Water_Temp},
+          { label: "Wave Height", value: this.state.trackerValues.Wave_Height},
         ]}
         infoTimeFormat="%H:%M"
         infoWidth={120}
-        infoHeight={55}
+        infoHeight={66}
         markerRadius={2}
         markerStyle={{
           fill: "black"
@@ -148,18 +152,20 @@ class App extends Component {
           onTrackerChanged={this.handleTrackerChanged}
         >
           <ChartRow height="200">
-            <YAxis id="axis" label="Wind Speed" max={30} width="60" type="linear"/>
+            <YAxis id="wind" label="Wind Speed" max={30} width="60" type="linear"/>
             <Charts>
               <AreaChart
                 style={style}
-                axis="axis"
+                axis="wind"
                 series={series}
                 columns={{
                 up: ["Avg_Wind"]
               }}/>
-              <LineChart style={style} axis="axis" series={series} columns={["Gust"]}/> 
+              <LineChart style={style} axis="wind" series={series} columns={["Gust"]}/> 
+              <LineChart style={style} axis="temp" series={series} columns={["Wave_Height"]}/> 
               {this.renderMarker()}
             </Charts>
+            <YAxis id="temp" label="Wave Height" min={0} max={5} width="60" type="linear"/>
           </ChartRow>
         </ChartContainer>
       );
