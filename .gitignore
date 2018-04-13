@@ -1,0 +1,4 @@
+*.py
+*.json
+*/node_modules
+.firebaserc
