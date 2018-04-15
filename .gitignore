@@ -1,5 +1,6 @@
-*.py
+auth.py
 *.json
 */node_modules
 */src/firebase
 .firebaserc
+

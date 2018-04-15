@@ -78,7 +78,7 @@ class App extends Component {
           columns: columns,
           points: points
         };
-
+        
         let series = new TimeSeries(data);
         this.setState({
           series,
