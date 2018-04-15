@@ -3,4 +3,6 @@ auth.py
 */node_modules
 */src/firebase
 .firebaserc
+*.pyc
 
+*/__pycache__
