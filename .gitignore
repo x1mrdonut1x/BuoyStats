@@ -1,8 +1,8 @@
 auth.py
-*.json
 */node_modules
 */src/firebase
 .firebaserc
 *.pyc
+key.json
 
 */__pycache__

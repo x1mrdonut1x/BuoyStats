@@ -1,4 +1,4 @@
-const style = {
+const chartStyles = {
     Avg_Wind: {
         line: {
             normal: {
@@ -117,4 +117,4 @@ const style = {
     },
 }
 
-export default style;
+export default chartStyles;

@@ -12,20 +12,35 @@ const style = (theme) => ({
         textAlign: 'left',
         font: 'normal 16px sans-serif',
         padding: '5px 40px',
+        position: 'fixed',
+        bottom: 0,
     },
     footerLeft: {
         color: '#8f9296',
         fontSize: '14px',
-        lineHeight: '55px',
         float: 'left',
         margin: 0,
+        [theme.breakpoints.up('sm')]: {
+            lineHeight: '55px',
+        },
+        [theme.breakpoints.down('sm')]: {
+            lineHeight: '36px',
+        },
     },
     footerRight: {
         float: 'right',
-        lineHeight: '55px',
         margin: 0,
+        [theme.breakpoints.up('sm')]: {
+            lineHeight: '55px',
+        },
+        [theme.breakpoints.down('sm')]: {
+            lineHeight: '36px',
+        },
+    },
+    footer: {
+        position: 'fixed',
+        bottom: 0,
     }
-
 });
 
 export default style;
