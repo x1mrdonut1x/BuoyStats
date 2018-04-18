@@ -4,7 +4,7 @@ const chartStyles = {
             normal: {
                 stroke: "steelblue",
                 fill: "none",
-                strokeWidth: 1
+                strokeWidth: 2
             },
             highlighted: {
                 stroke: "#5a98cb",
@@ -50,7 +50,8 @@ const chartStyles = {
         normal: {
             stroke: "green",
             fill: "none",
-            strokeWidth: 1
+            strokeWidth: 1,
+            opacity: 0.5
         },
         highlighted: {
             stroke: "#5a98cb",

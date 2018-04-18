@@ -11,6 +11,8 @@ import {
   AreaChart,
   Baseline,
   EventMarker,
+  Legend,
+  styler
 } from "react-timeseries-charts";
 import { TimeSeries, TimeRange } from "pondjs";
 import { withStyles } from 'material-ui/styles';
@@ -68,6 +70,8 @@ class Chart extends Component {
     Firebase
       .database()
       .ref(`/buoys/${userId}/`)
+      .orderByChild('time')
+      .startAt(DateTime.local().minus({ days: 2 }).valueOf())
       .once('value')
       .then(entries => {
         entries = this.unwindDictionary(entries.val());
@@ -98,7 +102,7 @@ class Chart extends Component {
           columns: columns,
           points: points
         };
-
+        
         let series = new TimeSeries(data);
         let timerange = new TimeRange([DateTime.local().startOf('day').valueOf(), series.end()])
         this.setState({
@@ -111,56 +115,58 @@ class Chart extends Component {
   }
 
   getFormattedString(attribute, event){
+    let value = event.get(attribute);
+    if(value != null){
       switch(attribute){
         case 'Avg_Wind':
             return {
                     label: 'Wind',
-                    value: `${event.get(attribute)} knots`
+                    value: `${value} knots`
                 }
         case 'Gust':
             return {
                     label: 'Gust',
-                    value: `${event.get(attribute)} knots`
+                    value: `${value} knots`
                 }
         case 'Water_Temp':
             return {
                     label: 'Water Temp',
-                    value: `${event.get(attribute)}\u00B0C`
+                    value: `${value}\u00B0C`
                 }
         case 'Wave_Height':
             return {
                     label: 'Wave Height',
-                    value: `${event.get(attribute)}m`
+                    value: `${value}m`
                 }
         case 'Wave_Period':
             return {
                     label: 'Wave Period',
-                    value: `${event.get(attribute)}s`
+                    value: `${value}s`
                 }
         case 'Wind_Dir':
             return {
                     label: 'Wind Dir',
-                    value: `${event.get(attribute)}\u00B0`
+                    value: `${value}\u00B0`
                 }
         case 'Gust_Dir':
             return {
                     label: 'Gust Dir',
-                    value: `${event.get(attribute)}\u00B0`
+                    value: `${value}\u00B0`
                 }
         case 'Air_Temp':
             return {
                     label: 'Air Temp',
-                    value: `${event.get(attribute)}\u00B0C`
+                    value: `${value}\u00B0C`
                 }
         case 'Humidity':
             return {
                     label: 'Humidity',
-                    value: `${event.get(attribute)}%`
+                    value: `${value}%`
                 }
         case 'Air_Press':
             return {
                     label: 'Air Press',
-                    value: `${event.get(attribute)}hPa`
+                    value: `${value}hPa`
                 }
         default:
             return {
@@ -168,6 +174,7 @@ class Chart extends Component {
                 value: ''
             }
       }
+    }
   }
 
   handleTrackerChanged = t => {
@@ -179,7 +186,7 @@ class Chart extends Component {
         
         const values = [
             columns.find(c => c === 'Avg_Wind') ? this.getFormattedString('Avg_Wind', event) : null,
-            ...this.getAttributes(5).map(col => this.getFormattedString(col, event))
+            ...this.getAttributes(4).map(col => this.getFormattedString(col, event))
         ]
 
         this.setState({
@@ -194,13 +201,12 @@ class Chart extends Component {
   };
 
   renderMarker = () => {
-    let { columns } = this.state;
     return (
       <EventMarker
         type="flag"
         axis="wind"
         event={this.state.trackerEvent}
-        column={columns.find(c => c === 'Avg_Wind') ? 'Avg_Wind' : this.getAttributes(1)[0]}
+        column={"Avg_Wind"}
         info={this.state.trackerValues}
         infoTimeFormat="%H:%M"
         infoWidth={120}
@@ -227,7 +233,7 @@ class Chart extends Component {
     this.setState({ timerange })
   }
 
-  getAttributes(size){
+  getAttributes(size=this.columns.size){
     let { columns } = this.state;
     const attributes = [
         'Gust',
@@ -242,11 +248,16 @@ class Chart extends Component {
     ];
 
     let output = [];
-    for(let i = 0; i < (columns.length > size + 1 ? (size + 1) : columns.length); ++i){
-        if(attributes.find(c => c === columns[i])){
-            output.push(columns[i]);
+    let num = 0;
+    for(let i = 0; i < attributes.length; ++i){
+        if(columns.find(c => c === attributes[i])){
+            if(++num > size){
+              return output
+            }
+            output.push(attributes[i]);
         }
     }
+    // console.log(output)
     return output;
 
     // switch(userId){
@@ -273,11 +284,20 @@ class Chart extends Component {
     // }
   }
 
+  getLabels(){
+    let { columns } = this.state;
+    return columns.map(c => c.replace('_', ' '))
+  }
+
 
   render() {
     let { series, timerange, maxValue, columns } = this.state;
     let { classes } = this.props;
-
+    const legendStyle = styler([
+        {key: "Avg_Wind", color: "steelblue", width: 3},
+        {key: "Gust", color: "green", width: 2}
+    ]);
+    console.log
     if (series) {
       return (
         <div className={classes.container}>
@@ -292,26 +312,37 @@ class Chart extends Component {
                         <ChartRow height="200">
                                 <YAxis id="wind" label="Wind Speed" max={maxValue + 5} width="60" type="linear"/>
                                 <Charts>
-                                    {columns.find(c => c === 'Avg_Wind') ?
-                                    
-                                        [<Baseline axis="wind" value={20} label="20 Knots" position="right" />,
-                                        <AreaChart
-                                            style={chartStyles}
-                                            axis="wind"
-                                            series={series}
-                                            columns={{
-                                            up: ["Avg_Wind"]
-                                        }}/>]
-                                    : null}
-                                    {this.getAttributes(3).map(attr => (<LineChart key={attr} style={chartStyles} axis="wind" series={series} columns={["Gust"]}/> ))}
-                                    {/* <LineChart style={chartStyles} axis="wind" series={series} columns={["Gust"]}/> 
-                                    <LineChart style={chartStyles} axis="height" series={series} columns={["Wave_Height"]}/> */}
+                                  <Baseline axis="wind" value={20} label="20 Knots" position="right" />
+                                    <AreaChart
+                                        style={chartStyles}
+                                        axis="wind"
+                                        series={series}
+                                        columns={{
+                                          up: ["Avg_Wind"]
+                                        }}
+                                    />
+                                    <LineChart style={chartStyles} axis="wind" series={series} columns={["Gust"]}/> 
+                                    {/* <LineChart style={chartStyles} axis="height" series={series} columns={["Wave_Height"]}/> */}
                                     {this.renderMarker()}
                                 </Charts>
-                                <YAxis id="height" label="Wave Height" min={0} max={10} width="60" type="linear"/>
                         </ChartRow>
                     </ChartContainer>
             </Resizable>
+            <div>
+              <Legend
+                type="line"
+                align="right"
+                style={legendStyle}
+                // highlight={this.state.highlight}
+                // onHighlightChange={highlight => this.setState({highlight})}
+                // selection={this.state.selection}
+                // onSelectionChange={selection => this.setState({selection})}
+                categories={[
+                    {key: "Avg_Wind", label: "Wind"},
+                    {key: "Gust", label: "Gust"}
+                ]}
+              />
+            </div>
         </div>
       );
     } else {
