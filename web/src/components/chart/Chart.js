@@ -102,7 +102,7 @@ class Chart extends Component {
           columns: columns,
           points: points
         };
-        
+
         let series = new TimeSeries(data);
         let timerange = new TimeRange([DateTime.local().startOf('day').valueOf(), series.end()])
         this.setState({
@@ -291,13 +291,12 @@ class Chart extends Component {
 
 
   render() {
-    let { series, timerange, maxValue, columns } = this.state;
+    let { series, timerange, maxValue } = this.state;
     let { classes } = this.props;
     const legendStyle = styler([
         {key: "Avg_Wind", color: "steelblue", width: 3},
         {key: "Gust", color: "green", width: 2}
     ]);
-    console.log
     if (series) {
       return (
         <div className={classes.container}>

@@ -1,6 +1,11 @@
 {
-  "rules": {
-    ".read": "true",
-    ".write": "auth != null"
-  }
+    "rules": {
+        ".read": "true",
+        ".write": "auth != null",
+        "buoys": {
+            "$buoyId": {
+                ".indexOn": "time"
+            }
+        }
+    }
 }
