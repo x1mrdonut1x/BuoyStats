@@ -42,8 +42,8 @@ class Main extends Component {
                             <MenuItem value={2320627075}>@DublinBayBuoy</MenuItem>
                             {/* <MenuItem value={2800302088}>@FinnisBuoy</MenuItem> */}
                             <MenuItem value={3055900497}>@FoyleBuoy</MenuItem>
-                            <MenuItem value={2359535845}>@SplaughBuoy</MenuItem>
-                            <MenuItem value={3055873233}>@SouthHunterBuoy</MenuItem>
+                            {/* <MenuItem value={2359535845}>@SplaughBuoy</MenuItem> */}
+                            {/* <MenuItem value={3055873233}>@SouthHunterBuoy</MenuItem> */}
                             {/* <MenuItem value={869880030444310529}>@SouthRockBuoy</MenuItem> */}
                         </Select>
                     </Grid>

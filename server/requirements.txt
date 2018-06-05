@@ -1,2 +1,2 @@
-tweepy==3.6.0
 Pyrebase==3.0.27
+python_twitter==3.4.1

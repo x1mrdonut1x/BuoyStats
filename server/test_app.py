@@ -78,9 +78,14 @@ data = {
 }
 
 class TestListener(unittest.TestCase):
-
     def test1(self):
-        self.assertEqual(extractData(data), {'Avg_Wind':19.0, 'Gust':26.0, 'Wave_Height':0.9, 'Wave_Period':4.0, 'Wind_Dir':140.0, 'Gust_Dir':135.0, 'time':1523783880000.0})
+        data1 = data
+        self.assertEqual(extractData(data1), {'Avg_Wind':19.0, 'Gust':26.0, 'Wave_Height':0.9, 'Wave_Period':4.0, 'Wind_Dir':140.0, 'Gust_Dir':135.0, 'time':1523783880000})
+
+    def test2(self):
+        data2 = data
+        data2['text'] = 'Something is wrong!'
+        self.assertFalse(extractData(data2))
 
 if __name__ == '__main__':
     unittest.main()

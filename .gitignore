@@ -4,5 +4,6 @@ auth.py
 .firebaserc
 *.pyc
 key.json
+*/lib
 
 */__pycache__
